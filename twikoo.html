@@ -1,0 +1,440 @@
+<!DOCTYPE html> 
+<html lang="zh-CN"> 
+<head>
+<meta content="default-src 'none'; style-src * 'unsafe-inline'; script-src * 'unsafe-inline'; img-src * data: blob:; font-src * data:; media-src * data: blob:; connect-src 'none'; form-action 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'" http-equiv="Content-Security-Policy"/> 
+<meta charset="utf-8"/> 
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/> 
+<title>Twikoo 评论区</title> 
+<script src="https://image.uc.cn/s/uae/g/3n/mos-production/fontawesome-free-7.1.0-web/js/all.min.js"></script> 
+<script src="https://image.uc.cn/s/uae/g/3n/mos-production/0915/3.4.17.js"></script> 
+<style> 
+/* 自定义颜色变量 */ 
+:root { 
+  --color-primary: #6C63FF; 
+  --color-primary-light: #8A84FF; 
+  --color-primary-dark: #554FD8; 
+  --color-secondary: #F8F9FA; 
+  --color-secondary-dark: #E9ECEF; 
+  --color-text: #191B1F; 
+  --color-text-light: #6C757D; 
+  --color-border: #DEE2E6; 
+}
+
+/* 自定义动画 */ 
+@keyframes pulse-slow { 
+  0%, 100% { opacity: 1; } 
+  50% { opacity: 0.5; } 
+}
+
+@keyframes fadeInUp { 
+  0% { 
+    opacity: 0; 
+    transform: translateY(20px); 
+  } 
+  100% { 
+    opacity: 1; 
+    transform: translateY(0); 
+  } 
+}
+
+@keyframes fadeIn { 
+  0% { opacity: 0; } 
+  100% { opacity: 1; } 
+}
+
+@keyframes buttonHover { 
+  0% { transform: scale(1); } 
+  100% { transform: scale(1.05); } 
+}
+
+@keyframes loadingBar { 
+  0% { transform: translateX(-100%); } 
+  50% { transform: translateX(0%); } 
+  100% { transform: translateX(100%); } 
+}
+
+/* 定义动画类 */ 
+.pulse-slow { 
+  animation: pulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite; 
+}
+
+.animate-pulse-slow { 
+  animation: pulse-slow 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite; 
+}
+
+.animate-fade-in-up { 
+  animation: fadeInUp 0.8s ease-out forwards; 
+}
+
+.animate-fade-in { 
+  animation: fadeIn 0.6s ease-out forwards; 
+}
+
+.animate-button-hover { 
+  animation: buttonHover 0.3s ease-out forwards; 
+}
+
+.animate-loading-bar { 
+  animation: loadingBar 1.5s ease-in-out infinite; 
+}
+
+/* 页面加载过渡动画 */ 
+.page-loading-overlay { 
+  position: fixed; 
+  top: 0; 
+  left: 0; 
+  width: 100%; 
+  height: 100%; 
+  background-color: #F8F9FA; 
+  display: flex; 
+  flex-direction: column; 
+  justify-content: center; 
+  align-items: center; 
+  z-index: 9999; 
+  transition: opacity 0.5s ease-out; 
+} 
+.page-loading-spinner { 
+  width: 60px; 
+  height: 60px; 
+  border: 4px solid rgba(108, 99, 255, 0.2); 
+  border-top-color: #6C63FF; 
+  border-radius: 50%; 
+  animation: spin 1s linear infinite; 
+  margin-bottom: 20px; 
+} 
+@keyframes spin { 
+  to { transform: rotate(360deg); } 
+} 
+.page-loading-text { 
+  color: #6C63FF; 
+  font-size: 1.125rem; 
+  font-weight: 500; 
+  letter-spacing: 0.05em; 
+} 
+
+/* 评论淡入动画 */ 
+.twikoo-comment { 
+  opacity: 0; 
+  animation: fadeInUp 0.8s ease-out forwards; 
+  animation-delay: calc(var(--comment-index, 0) * 0.1s); 
+} 
+
+/* 按钮悬停微动效 */ 
+.btn-hover-effect { 
+  transition: all 0.2s ease-out; 
+} 
+.btn-hover-effect:hover { 
+  transform: translateY(-2px); 
+  box-shadow: 0 6px 20px rgba(108, 99, 255, 0.2); 
+} 
+
+/* 自定义滚动条 */ 
+::-webkit-scrollbar { 
+  width: 8px; 
+} 
+::-webkit-scrollbar-track { 
+  background: #F8F9FA; 
+  border-radius: 4px; 
+} 
+::-webkit-scrollbar-thumb { 
+  background: #DEE2E6; 
+  border-radius: 4px; 
+} 
+::-webkit-scrollbar-thumb:hover { 
+  background: #6C757D; 
+} 
+
+/* 输入框聚焦效果 */ 
+.input-focus:focus { 
+  border-color: #6C63FF; 
+  box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1); 
+} 
+
+/* 响应式调整 */ 
+@media (max-width: 640px) { 
+  .container-padding { 
+    padding-left: 1rem; 
+    padding-right: 1rem; 
+  } 
+} 
+</style> 
+<script> 
+!(function(j,a,g){j.__itrace_conf = {bid: 'kt40h0wl-koyh4af8',rel: '', uid: '20d3faee-7ba6-43f0-aad2-eb7e753c1ca5' , spa: true, plugins:['jserror','interface','perf','resource','flow','blank']};var b = a.createElement("script");var d = a.getElementsByTagName("script")[0];b.type = "text/javascript";b.crossorigin = true;b.async = true;b.onload = function(){j.__itrace && j.__itrace.setReady()};d.parentNode.insertBefore(b,d);b.src = g})(window, document, "https://g.alicdn.com/woodpeckerx/itrace-next/itrace.iife.js") 
+</script> 
+</head> 
+<body class="bg-secondary text-text font-sans antialiased min-h-screen"> 
+<div class="page-loading-overlay" id="pageLoading"> 
+  <div class="page-loading-spinner"></div> 
+  <div class="page-loading-text">加载中...</div> 
+</div> 
+<div class="min-h-screen flex flex-col"> 
+  <header class="bg-white shadow-sm py-6"> 
+    <div class="max-w-4xl mx-auto container-padding"> 
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between"> 
+        <div class="mb-4 md:mb-0"> 
+          <h1 class="text-3xl font-bold text-primary">评论交流区</h1> 
+          <p class="text-text-light mt-2">欢迎留下您的想法、建议或问题</p> 
+        </div> 
+        <div class="flex items-center space-x-4"> 
+          <div class="flex items-center text-text-light"> 
+            <i class="fas fa-comments text-primary mr-2"></i> 
+            <span id="commentCount">0 条评论</span> 
+          </div> 
+          <button class="btn-hover-effect bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg flex items-center transition-all duration-200" id="refreshBtn"> 
+            <i class="fas fa-sync-alt mr-2"></i> 刷新 
+          </button> 
+        </div> 
+      </div> 
+    </div> 
+  </header> 
+  
+  <main class="flex-grow py-8"> 
+    <div class="max-w-4xl mx-auto container-padding"> 
+      <section class="bg-white rounded-xl shadow-md p-6 mb-8 animate-fade-in"> 
+        <h2 class="text-xl font-semibold text-text mb-4 flex items-center"> 
+          <i class="fas fa-edit text-primary mr-2"></i> 发表评论 
+        </h2> 
+        <div class="space-y-4"> 
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4"> 
+            <div> 
+              <label class="block text-sm font-medium text-text-light mb-1">昵称 *</label> 
+              <input class="w-full px-4 py-2 border border-border rounded-lg input-focus transition-all duration-200" id="nickname" placeholder="请输入您的昵称" type="text"/> 
+            </div> 
+            <div> 
+              <label class="block text-sm font-medium text-text-light mb-1">邮箱 *</label> 
+              <input class="w-full px-4 py-2 border border-border rounded-lg input-focus transition-all duration-200" id="email" placeholder="用于接收回复通知" type="email"/> 
+            </div> 
+          </div> 
+          <div> 
+            <label class="block text-sm font-medium text-text-light mb-1">网站 (可选)</label> 
+            <input class="w-full px-4 py-2 border border-border rounded-lg input-focus transition-all duration-200" id="website" placeholder="https://example.com" type="url"/> 
+          </div> 
+          <div> 
+            <label class="block text-sm font-medium text-text-light mb-1">评论内容 *</label> 
+            <textarea class="w-full px-4 py-2 border border-border rounded-lg input-focus transition-all duration-200 resize-none" id="commentContent" placeholder="请输入您的评论内容..." rows="4"></textarea> 
+          </div> 
+          <div class="flex justify-end"> 
+            <button class="btn-hover-effect bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg font-medium flex items-center transition-all duration-200" id="submitComment"> 
+              <i class="fas fa-paper-plane mr-2"></i> 发布评论 
+            </button> 
+          </div> 
+        </div> 
+      </section> 
+      
+      <section class="bg-white rounded-xl shadow-md p-6"> 
+        <div class="flex items-center justify-between mb-6"> 
+          <h2 class="text-xl font-semibold text-text flex items-center"> 
+            <i class="fas fa-comment-dots text-primary mr-2"></i> 所有评论 
+          </h2> 
+          <div class="text-sm text-text-light"> 
+            <i class="fas fa-sort-amount-down mr-1"></i> 按时间倒序 
+          </div> 
+        </div> 
+        <div class="space-y-6" id="tcomment"> 
+          <div class="text-center py-12"> 
+            <div class="inline-block animate-pulse-slow"> 
+              <i class="fas fa-comments text-4xl text-primary-light mb-4"></i> 
+            </div> 
+            <p class="text-text-light mt-4">正在加载评论...</p> 
+          </div> 
+        </div> 
+        <div class="hidden text-center py-12" id="noComments"> 
+          <i class="fas fa-comment-slash text-4xl text-border mb-4"></i> 
+          <h3 class="text-lg font-medium text-text mb-2">暂无评论</h3> 
+          <p class="text-text-light">成为第一个发表评论的人吧！</p> 
+        </div> 
+      </section> 
+    </div> 
+  </main> 
+  
+  <!-- 修改后的页脚 -->
+  <footer class="bg-white border-t border-border py-8 mt-12">
+    <div class="max-w-4xl mx-auto container-padding text-center">
+      <p class="text-text-light text-sm">
+        评论区有 
+        <a href="https://github.com/imaegoo/twikoo" target="_blank" class="text-primary hover:underline font-medium">
+          Twikoo
+        </a> 
+        提供支持
+      </p>
+    </div>
+  </footer>
+
+</div> 
+
+<script src="https://cdn.jsdelivr.net/npm/twikoo@1.6.44/dist/twikoo.all.min.js"></script> 
+<script> 
+// 页面加载完成后隐藏过渡动画 
+window.addEventListener('load', function() { 
+  const loadingOverlay = document.getElementById('pageLoading'); 
+  if (loadingOverlay) { 
+    loadingOverlay.style.opacity = '0'; 
+    setTimeout(() => { 
+      loadingOverlay.style.display = 'none'; 
+    }, 500); 
+  } 
+  // 初始化 Twikoo 
+  initTwikoo(); 
+}); 
+
+// 初始化 Twikoo 评论系统 
+function initTwikoo() { 
+  // 注意：用户需要将这里的 envId 替换为自己的实际值 
+  // 示例：'https://your-vercel-app.vercel.app' 或 'your-tcb-env-id' 
+  const envId = 'YOUR_TWIKOO_ENV_ID_HERE'; // ← 请替换为您的 envId 
+  if (!envId || envId === 'YOUR_TWIKOO_ENV_ID_HERE') { 
+    console.warn('请先配置您的 Twikoo envId'); 
+    document.getElementById('tcomment').innerHTML = ` 
+      <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded"> 
+        <div class="flex"> 
+          <div class="flex-shrink-0"> 
+            <i class="fas fa-exclamation-triangle text-yellow-400"></i> 
+          </div> 
+          <div class="ml-3"> 
+            <p class="text-sm text-yellow-700"> 
+              请先配置 Twikoo envId。在代码中找到 <code class="bg-yellow-100 px-1 rounded">const envId = 'YOUR_TWIKOO_ENV_ID_HERE';</code> 并将其替换为您的实际 envId 值。 
+            </p> 
+          </div> 
+        </div> 
+      </div> 
+    `; 
+    return; 
+  } 
+  twikoo.init({ 
+    envId: envId, 
+    el: '#tcomment', 
+    path: window.location.pathname, 
+    lang: 'zh-CN', 
+    onCommentLoaded: function() { 
+      // 评论加载完成后的回调 
+      applyCommentAnimations(); 
+      updateCommentCount(); 
+      // 隐藏无评论提示（如果有评论的话） 
+      const commentContainer = document.getElementById('tcomment'); 
+      const noComments = document.getElementById('noComments'); 
+      if (commentContainer.children.length > 1) { // 排除加载占位符 
+        noComments.classList.add('hidden'); 
+      } else { 
+        noComments.classList.remove('hidden'); 
+      } 
+    } 
+  }).then(() => { 
+    console.log('Twikoo 初始化成功'); 
+  }).catch((err) => { 
+    console.error('Twikoo 初始化失败:', err); 
+    document.getElementById('tcomment').innerHTML = ` 
+      <div class="bg-red-50 border-l-4 border-red-400 p-4 rounded"> 
+        <div class="flex"> 
+          <div class="flex-shrink-0"> 
+            <i class="fas fa-exclamation-circle text-red-400"></i> 
+          </div> 
+          <div class="ml-3"> 
+            <p class="text-sm text-red-700"> 
+              Twikoo 评论系统加载失败。请检查您的 envId 配置是否正确，并确保网络连接正常。 
+            </p> 
+          </div> 
+        </div> 
+      </div> 
+    `; 
+  }); 
+} 
+
+// 应用评论淡入动画 
+function applyCommentAnimations() { 
+  const comments = document.querySelectorAll('.tk-comment, .tk-row'); 
+  comments.forEach((comment, index) => { 
+    comment.classList.add('twikoo-comment'); 
+    comment.style.setProperty('--comment-index', index); 
+    // 为评论内的按钮添加悬停效果 
+    const buttons = comment.querySelectorAll('button, .tk-btn'); 
+    buttons.forEach(btn => { 
+      btn.classList.add('btn-hover-effect'); 
+    }); 
+  }); 
+} 
+
+// 更新评论数量 
+function updateCommentCount() { 
+  const comments = document.querySelectorAll('.tk-comment').length; 
+  document.getElementById('commentCount').textContent = `${comments} 条评论`; 
+} 
+
+// 刷新按钮功能 
+document.getElementById('refreshBtn').addEventListener('click', function() { 
+  const btn = this; 
+  const originalHTML = btn.innerHTML; 
+  // 添加加载状态 
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>刷新中...'; 
+  btn.disabled = true; 
+  // 重新初始化 Twikoo 
+  initTwikoo(); 
+  // 恢复按钮状态 
+  setTimeout(() => { 
+    btn.innerHTML = originalHTML; 
+    btn.disabled = false; 
+  }, 1500); 
+}); 
+
+// 模拟评论提交（实际应由 Twikoo 处理） 
+document.getElementById('submitComment').addEventListener('click', function() { 
+  const nickname = document.getElementById('nickname').value.trim(); 
+  const email = document.getElementById('email').value.trim(); 
+  const content = document.getElementById('commentContent').value.trim(); 
+  if (!nickname || !email || !content) { 
+    alert('请填写所有必填字段（昵称、邮箱和评论内容）'); 
+    return; 
+  } 
+  if (!validateEmail(email)) { 
+    alert('请输入有效的邮箱地址'); 
+    return; 
+  } 
+  const btn = this; 
+  const originalHTML = btn.innerHTML; 
+  // 模拟提交过程 
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>提交中...'; 
+  btn.disabled = true; 
+  // 在实际应用中，这里应该调用 Twikoo 的提交 API 
+  // 此处仅模拟成功提交的效果 
+  setTimeout(() => { 
+    alert('评论提交成功！请等待 Twikoo 系统处理并显示。'); 
+    btn.innerHTML = originalHTML; 
+    btn.disabled = false; 
+    // 清空表单 
+    document.getElementById('nickname').value = ''; 
+    document.getElementById('email').value = ''; 
+    document.getElementById('website').value = ''; 
+    document.getElementById('commentContent').value = ''; 
+    // 刷新评论列表 
+    document.getElementById('refreshBtn').click(); 
+  }, 1500); 
+}); 
+
+// 邮箱验证函数 
+function validateEmail(email) { 
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
+  return re.test(email); 
+} 
+
+// 为输入框添加回车提交支持 
+document.getElementById('commentContent').addEventListener('keydown', function(e) { 
+  if (e.ctrlKey && e.key === 'Enter') { 
+    document.getElementById('submitComment').click(); 
+  } 
+}); 
+
+// 页面滚动时添加细微效果 
+let lastScrollTop = 0; 
+window.addEventListener('scroll', function() { 
+  const scrollTop = window.pageYOffset || document.documentElement.scrollTop; 
+  const header = document.querySelector('header'); 
+  if (scrollTop > lastScrollTop && scrollTop > 100) { 
+    header.style.transform = 'translateY(-100%)'; 
+  } else { 
+    header.style.transform = 'translateY(0)'; 
+  } 
+  header.style.transition = 'transform 0.3s ease-out'; 
+  lastScrollTop = scrollTop; 
+}); 
+</script> 
+</body> 
+</html>
